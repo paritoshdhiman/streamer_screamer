@@ -78,41 +78,41 @@ st.logo('https://libertyenergy.com/wp-content/uploads/2023/05/Liberty-Energy-Hor
 
 st.title("STREAMER SCREAMER")
 
-fqdn = socket.getfqdn()[:3]
-if fqdn == "LOS":
+# fqdn = socket.getfqdn()[:3]
+# if fqdn == "LOS":
 
-    # File upload section
-    uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
-        st.write("Preview of uploaded CSV file:")
-        st.dataframe(df)
+# File upload section
+uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
+    st.write("Preview of uploaded CSV file:")
+    st.dataframe(df)
 
-    # IP and port input section
-    c1, c2 = st.columns(2)
-    with c1:
-        ip = st.text_input("Enter the IP address", value="127.0.0.1")
-    with c2:
-        port = st.number_input("Enter the port", value=8080, min_value=1, max_value=65535)
+# IP and port input section
+c1, c2 = st.columns(2)
+with c1:
+    ip = st.text_input("Enter the IP address", value="127.0.0.1")
+with c2:
+    port = st.number_input("Enter the port", value=8080, min_value=1, max_value=65535)
 
-    # Interval input section
-    interval = st.slider("Set the interval between rows (seconds)", min_value=0.1, max_value=5.0, value=1.0, step=0.1)
+# Interval input section
+interval = st.slider("Set the interval between rows (seconds)", min_value=0.1, max_value=5.0, value=1.0, step=0.1)
 
-    # Streaming controls
-    if st.button("Start Streaming"):
-        if uploaded_file and ip and port:
-            st.write(f"Starting to stream data to {ip}:{port}...")
-            streamer.start_stream(df, ip, int(port), interval)
-        else:
-            st.error("Please upload a CSV file and specify IP and port.")
-
-    if st.button("Stop Streaming"):
-        streamer.stop_stream()
-        st.write("Streaming stopped.")
-
-    # Display current status
-    if streamer.is_streaming:
-        st.success(f"Streaming data to {ip}:{port}...")
+# Streaming controls
+if st.button("Start Streaming"):
+    if uploaded_file and ip and port:
+        st.write(f"Starting to stream data to {ip}:{port}...")
+        streamer.start_stream(df, ip, int(port), interval)
     else:
-        st.info("Streaming is not active.")
+        st.error("Please upload a CSV file and specify IP and port.")
+
+if st.button("Stop Streaming"):
+    streamer.stop_stream()
+    st.write("Streaming stopped.")
+
+# Display current status
+if streamer.is_streaming:
+    st.success(f"Streaming data to {ip}:{port}...")
+else:
+    st.info("Streaming is not active.")
 
