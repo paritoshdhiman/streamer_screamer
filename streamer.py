@@ -123,66 +123,63 @@ streamer = TCPStreamer()
 
 st.logo('https://libertyenergy.com/wp-content/uploads/2023/05/Liberty-Energy-Horizontal-Logo.png', size='large', link='https://libertyenergy.com/')
 
-st.title("STREAMER SCREAMER")
+st.title("LBRT STREAMER")
 
-fqdn = socket.getfqdn()[:3]
-if fqdn == "LOS":
+# Selection between Maven and FracPro
+dataacq_type = st.selectbox("DataAcq Type", options=("Maven", "FracPro"))
 
-    # Selection between Maven and FracPro
-    dataacq_type = st.selectbox("DataAcq Type", options=("Maven", "FracPro"))
+# File upload section
+uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
 
-    # File upload section
-    uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
+    # Check if "Date Time" column exists
+    if dataacq_type != "FracPro":
+        if "Date Time" not in df.columns:
+            # print('"Date Time" column is missing. Adding it as the first column...')
 
-        # Check if "Date Time" column exists
-        if dataacq_type != "FracPro":
-            if "Date Time" not in df.columns:
-                # print('"Date Time" column is missing. Adding it as the first column...')
+            # Add the "Date Time" column as the first column
+            df.insert(0, "Date Time", pd.Timestamp.now())
 
-                # Add the "Date Time" column as the first column
-                df.insert(0, "Date Time", pd.Timestamp.now())
+    st.write("Preview of uploaded CSV file:")
+    st.dataframe(df)
 
-        st.write("Preview of uploaded CSV file:")
-        st.dataframe(df)
+# IP and port input section
+c1, c2 = st.columns(2)
+with c1:
+    ip = st.text_input("Enter the IP address", value="127.0.0.1")
+with c2:
+    port = st.number_input("Enter the port", value=8080, min_value=1, max_value=65535)
 
-    # IP and port input section
-    c1, c2 = st.columns(2)
-    with c1:
-        ip = st.text_input("Enter the IP address", value="127.0.0.1")
-    with c2:
-        port = st.number_input("Enter the port", value=8080, min_value=1, max_value=65535)
+# Interval input section
+interval = st.slider("Set the interval between rows (seconds)", min_value=0.1, max_value=5.0, value=1.0, step=0.1)
 
-    # Interval input section
-    interval = st.slider("Set the interval between rows (seconds)", min_value=0.1, max_value=5.0, value=1.0, step=0.1)
+m1, m2 = st.columns([1,2])
+with m1:
+    start_stream = st.button("Start Streaming")
+with m2:
+    stop_stream = st.button("Stop Streaming")
 
-    m1, m2 = st.columns([1,2])
-    with m1:
-        start_stream = st.button("Start Streaming")
-    with m2:
-        stop_stream = st.button("Stop Streaming")
-
-    # Streaming controls
-    if start_stream:
-        if uploaded_file and ip and port:
-            st.success(f"Starting to stream data to {ip}:{port}...")
+# Streaming controls
+if start_stream:
+    if uploaded_file and ip and port:
+        st.success(f"Starting to stream data to {ip}:{port}...")
 
 
-            def start_streaming():
-                asyncio.run(streamer.start_server(df, ip, int(port), interval))
+        def start_streaming():
+            asyncio.run(streamer.start_server(df, ip, int(port), interval))
 
 
-            threading.Thread(target=start_streaming).start()
-        else:
-            st.error("Please upload a CSV file and specify IP and port.")
+        threading.Thread(target=start_streaming).start()
+    else:
+        st.error("Please upload a CSV file and specify IP and port.")
 
-    # Stop streaming
-    if stop_stream:
-        def stop_streaming():
-            asyncio.run(streamer.stop_stream())
+# Stop streaming
+if stop_stream:
+    def stop_streaming():
+        asyncio.run(streamer.stop_stream())
 
 
-        threading.Thread(target=stop_streaming).start()
-        st.error("Streaming stopped.")
+    threading.Thread(target=stop_streaming).start()
+    st.error("Streaming stopped.")
 
